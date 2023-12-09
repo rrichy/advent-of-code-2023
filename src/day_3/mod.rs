@@ -30,7 +30,7 @@ fn part_one() -> u32 {
 
                     pointer += digit_start_index + number.len();
 
-                    for (pos, ch) in number.char_indices() {
+                    for (pos, _) in number.char_indices() {
                         let col_index: i32 = (absolute_start_index + pos).try_into().unwrap();
                         let row_index: i32 = row_index.try_into().unwrap();
 
@@ -104,8 +104,6 @@ impl PartialEq for PartNumber {
     }
 }
 
-struct GearParts(PartNumber, PartNumber);
-
 #[derive(Debug)]
 struct Gear {
     col_index: usize,
@@ -148,11 +146,131 @@ struct Schema {
 }
 
 impl Schema {
-    fn is_out_of_range(&self, col: i32, row: i32) -> bool {
-        col < 0
-            || col >= self.width.try_into().unwrap()
-            || row < 0
-            || row >= self.height.try_into().unwrap()
+    fn find_gear_parts(&self, gear: &mut Gear) -> () {
+        if gear.row_index > 0 {
+            let row_index = gear.row_index - 1;
+            let line = &self.lines[row_index];
+
+            if let Some(ch) = line.chars().nth(gear.col_index) {
+                if ch.is_numeric() {
+                    if let Some(pn) = self.get_part_number_from_subdigit(gear.col_index, row_index)
+                    {
+                        gear.add_part(pn);
+                    }
+                }
+            }
+
+            if gear.col_index > 0 {
+                let col_index = gear.col_index - 1;
+                if let Some(ch) = line.chars().nth(col_index) {
+                    if ch.is_numeric() {
+                        if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
+                            gear.add_part(pn);
+                        }
+                    }
+                }
+            }
+
+            if gear.col_index < self.width - 1 {
+                let col_index = gear.col_index + 1;
+                if let Some(ch) = line.chars().nth(col_index) {
+                    if ch.is_numeric() {
+                        if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
+                            gear.add_part(pn);
+                        }
+                    }
+                }
+            }
+        }
+
+        if gear.row_index < self.height - 1 {
+            let row_index = gear.row_index + 1;
+            let line = &self.lines[row_index];
+
+            if let Some(ch) = line.chars().nth(gear.col_index) {
+                if ch.is_numeric() {
+                    if let Some(pn) = self.get_part_number_from_subdigit(gear.col_index, row_index)
+                    {
+                        gear.add_part(pn);
+                    }
+                }
+            }
+
+            if gear.col_index > 0 {
+                let col_index = gear.col_index - 1;
+                if let Some(ch) = line.chars().nth(col_index) {
+                    if ch.is_numeric() {
+                        if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
+                            gear.add_part(pn);
+                        }
+                    }
+                }
+            }
+
+            if gear.col_index < self.width - 1 {
+                let col_index = gear.col_index + 1;
+                if let Some(ch) = line.chars().nth(col_index) {
+                    if ch.is_numeric() {
+                        if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
+                            gear.add_part(pn);
+                        }
+                    }
+                }
+            }
+        }
+
+        let row_index = gear.row_index;
+        let line = &self.lines[row_index];
+        if gear.col_index > 0 {
+            let col_index = gear.col_index - 1;
+            if let Some(ch) = line.chars().nth(col_index) {
+                if ch.is_numeric() {
+                    if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
+                        gear.add_part(pn);
+                    }
+                }
+            }
+        }
+
+        if gear.col_index < self.width - 1 {
+            let col_index = gear.col_index + 1;
+            if let Some(ch) = line.chars().nth(col_index) {
+                if ch.is_numeric() {
+                    if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
+                        gear.add_part(pn);
+                    }
+                }
+            }
+        }
+    }
+
+    fn get_part_number_from_subdigit(&self, col: usize, row: usize) -> Option<PartNumber> {
+        let line = &self.lines[row];
+        match line.chars().nth(col) {
+            Some(ch) => {
+                if ch.is_numeric() {
+                    let start_index = col
+                        - line[..col]
+                            .chars()
+                            .rev()
+                            .take_while(|&c| c.is_numeric())
+                            .count();
+
+                    let number: String = line[start_index..]
+                        .chars()
+                        .take_while(|&c| c.is_numeric())
+                        .collect();
+                    return Some(PartNumber {
+                        col_index: start_index,
+                        row_index: row,
+                        value: number.parse::<u32>().unwrap(),
+                        length: number.len(),
+                    });
+                }
+            }
+            None => (),
+        }
+        None
     }
 }
 
@@ -177,15 +295,11 @@ fn part_two() -> u32 {
                     pointer = absolute_gear_index + 1;
 
                     let mut gear = Gear::new(absolute_gear_index, absolute_row_index);
-                    find_gear_adjacents(&mut gear, &schema);
+                    schema.find_gear_parts(&mut gear);
 
                     if let (Some(part_1), Some(part_2)) = gear.parts {
                         sum += part_1.value * part_2.value;
                     }
-                    // match find_gear_adjacents(gear, &schema) {
-                    //     Some(GearParts(part_1, part_2)) => sum += part_1.value * part_2.value,
-                    //     None => (),
-                    // }
                 }
                 None => break,
             }
@@ -196,167 +310,6 @@ fn part_two() -> u32 {
 
     println!("Solved in: {:?}", start.elapsed());
     sum
-}
-
-fn find_gear_adjacents(gear: &mut Gear, schema: &Schema) -> () {
-    let col_index: i32 = gear.col_index.try_into().unwrap();
-    let row_index: i32 = gear.row_index.try_into().unwrap();
-
-    if !schema.is_out_of_range(col_index, row_index - 1) {
-        let row_index = row_index - 1;
-        let line = &schema.lines[gear.row_index - 1];
-
-        match line.chars().nth(gear.col_index) {
-            Some(ch) => {
-                if ch.is_numeric() {
-                    match get_part_number_from_subdigit(col_index, row_index, &schema) {
-                        Some(pn) => gear.add_part(pn),
-                        None => (),
-                    }
-                }
-            }
-            None => (),
-        }
-
-        if col_index - 1 >= 0 {
-            match line.chars().nth(gear.col_index - 1) {
-                Some(ch) => {
-                    if ch.is_numeric() {
-                        match get_part_number_from_subdigit(col_index - 1, row_index, &schema) {
-                            Some(pn) => gear.add_part(pn),
-                            None => (),
-                        }
-                    }
-                }
-                None => (),
-            }
-        }
-
-        match line.chars().nth(gear.col_index + 1) {
-            Some(ch) => {
-                if ch.is_numeric() {
-                    match get_part_number_from_subdigit(col_index + 1, row_index, &schema) {
-                        Some(pn) => gear.add_part(pn),
-                        None => (),
-                    }
-                }
-            }
-            None => (),
-        }
-    }
-
-    if !schema.is_out_of_range(col_index, row_index + 1) {
-        let row_index = row_index + 1;
-        let line = &schema.lines[gear.row_index + 1];
-
-        match line.chars().nth(gear.col_index) {
-            Some(ch) => {
-                if ch.is_numeric() {
-                    match get_part_number_from_subdigit(col_index, row_index, &schema) {
-                        Some(pn) => gear.add_part(pn),
-                        None => (),
-                    }
-                }
-            }
-            None => (),
-        }
-
-        if col_index - 1 >= 0 {
-            match line.chars().nth(gear.col_index - 1) {
-                Some(ch) => {
-                    if ch.is_numeric() {
-                        match get_part_number_from_subdigit(col_index - 1, row_index, &schema) {
-                            Some(pn) => gear.add_part(pn),
-                            None => (),
-                        }
-                    }
-                }
-                None => (),
-            }
-        }
-
-        match line.chars().nth(gear.col_index + 1) {
-            Some(ch) => {
-                if ch.is_numeric() {
-                    match get_part_number_from_subdigit(col_index + 1, row_index, &schema) {
-                        Some(pn) => gear.add_part(pn),
-                        None => (),
-                    }
-                }
-            }
-            None => (),
-        }
-    }
-
-    let line = &schema.lines[gear.row_index];
-    if gear.col_index >= 0 {
-        match line.chars().nth(gear.col_index - 1) {
-            Some(ch) => {
-                if ch.is_numeric() {
-                    match get_part_number_from_subdigit(col_index - 1, row_index, &schema) {
-                        Some(pn) => gear.add_part(pn),
-                        None => (),
-                    }
-                }
-            }
-            None => (),
-        }
-    }
-
-    if gear.col_index < schema.width - 1 {
-        match line.chars().nth(gear.col_index + 1) {
-            Some(ch) => {
-                if ch.is_numeric() {
-                    match get_part_number_from_subdigit(col_index + 1, row_index, &schema) {
-                        Some(pn) => gear.add_part(pn),
-                        None => (),
-                    }
-                }
-            }
-            None => (),
-        }
-    }
-}
-
-fn get_part_number_from_subdigit(
-    col_index: i32,
-    row_index: i32,
-    schema: &Schema,
-) -> Option<PartNumber> {
-    if schema.is_out_of_range(col_index, row_index) {
-        return None;
-    }
-
-    let row_index: usize = row_index.try_into().unwrap();
-    let col_index: usize = col_index.try_into().unwrap();
-
-    let line = &schema.lines[row_index];
-    match line.chars().nth(col_index) {
-        Some(ch) => {
-            if ch.is_numeric() {
-                let start_index = col_index
-                    - line[..col_index]
-                        .chars()
-                        .rev()
-                        .take_while(|&c| c.is_numeric())
-                        .count();
-
-                let number: String = line[start_index..]
-                    .chars()
-                    .take_while(|&c| c.is_numeric())
-                    .collect();
-                return Some(PartNumber {
-                    col_index: start_index,
-                    row_index,
-                    value: number.parse::<u32>().unwrap(),
-                    length: number.len(),
-                });
-            }
-        }
-        None => (),
-    }
-
-    None
 }
 
 #[cfg(test)]
