@@ -1,20 +1,15 @@
-use std::time::Instant;
-
 use regex::Regex;
 
-use crate::read_txt_file;
+use crate::timed;
 
-pub fn solve() {
+pub fn solve(input: String) {
     println!("Day One");
 
-    part_one();
-    part_two();
+    timed(|| part_one(input.clone()));
+    timed(|| part_two(input));
 }
 
-fn part_one() -> u32 {
-    let start = Instant::now();
-    let input = read_txt_file(1, crate::TextEnum::Input);
-
+fn part_one(input: String) -> u32 {
     let mut result = 0;
     input.lines().for_each(|line| {
         let mut calibration_value = "".to_string();
@@ -35,21 +30,14 @@ fn part_one() -> u32 {
         result += calibration_value;
     });
 
-    println!("Result: {:?}", result);
-
-    println!("Solved in: {:?}", start.elapsed());
-    0
+    result
 }
 
-fn part_two() -> u32 {
-    let start = Instant::now();
-    let input = read_txt_file(1, crate::TextEnum::Input);
-
+fn part_two(input: String) -> u32 {
     let mut result = 0;
 
     for line in input.lines() {
         let mut calibration_value = "".to_string();
-        // let mut normalized = String::from("");
         let rev = line.chars().rev().collect::<String>();
 
         let first = Regex::new(r"[1-9]|one|two|three|four|five|six|seven|eight|nine")
@@ -98,8 +86,22 @@ fn part_two() -> u32 {
         result += calibration_value;
     }
 
-    println!("Result: {:?}", result);
+    result
+}
 
-    println!("Solved in: {:?}", start.elapsed());
-    0
+#[cfg(test)]
+mod tests {
+    use crate::read_txt_file;
+
+    use super::*;
+
+    #[test]
+    fn part_one_test() {
+        assert_eq!(part_one(read_txt_file(1, crate::TextEnum::Input)), 55816);
+    }
+
+    #[test]
+    fn part_two_test() {
+        assert_eq!(part_two(read_txt_file(1, crate::TextEnum::Input)), 54980);
+    }
 }

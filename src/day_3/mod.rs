@@ -1,15 +1,13 @@
-use crate::{read_txt_file, timed};
+use crate::timed;
 
-pub fn solve() {
+pub fn solve(input: String) {
     println!("Day Three");
 
-    timed(part_one);
-    timed(part_two);
+    timed(|| part_one(input.clone()));
+    timed(|| part_two(input));
 }
 
-fn part_one() -> u32 {
-    let input = read_txt_file(3, crate::TextEnum::Input);
-
+fn part_one(input: String) -> u32 {
     let mut sum: u32 = 0;
 
     let schema: Vec<&str> = input.lines().collect();
@@ -239,8 +237,7 @@ impl Schema {
     }
 }
 
-fn part_two() -> u32 {
-    let input = read_txt_file(3, crate::TextEnum::Input);
+fn part_two(input: String) -> u32 {
     let mut sum: u32 = 0;
 
     let lines: Vec<&str> = input.lines().collect();
@@ -275,15 +272,17 @@ fn part_two() -> u32 {
 
 #[cfg(test)]
 mod tests {
+    use crate::read_txt_file;
+
     use super::*;
 
     #[test]
     fn part_one_test() {
-        assert_eq!(part_one(), 528799);
+        assert_eq!(part_one(read_txt_file(3, crate::TextEnum::Input)), 528799);
     }
 
     #[test]
     fn part_two_test() {
-        assert_eq!(part_two(), 84907174);
+        assert_eq!(part_two(read_txt_file(3, crate::TextEnum::Input)), 84907174);
     }
 }

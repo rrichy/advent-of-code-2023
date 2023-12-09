@@ -1,12 +1,11 @@
-use std::time::Instant;
 
-use crate::read_txt_file;
+use crate::timed;
 
-pub fn solve() {
+pub fn solve(input: String) {
     println!("Day Two");
 
-    part_one();
-    part_two();
+    timed(|| part_one(input.clone()));
+    timed(|| part_two(input));
 }
 
 struct GameSetup {
@@ -15,10 +14,7 @@ struct GameSetup {
     blue: u32,
 }
 
-fn part_one() -> u32 {
-    let start = Instant::now();
-    let input = read_txt_file(2, crate::TextEnum::Input);
-
+fn part_one(input: String) -> u32 {
     let setup = GameSetup {
         red: 12,
         green: 13,
@@ -63,16 +59,10 @@ fn part_one() -> u32 {
         sum_ids += game_id;
     });
 
-    println!("Result: {:?}", sum_ids);
-
-    println!("Solved in: {:?}", start.elapsed());
-    0
+    sum_ids
 }
 
-fn part_two() -> u32 {
-    let start = Instant::now();
-    let input = read_txt_file(2, crate::TextEnum::Input);
-
+fn part_two(input: String) -> u32 {
     let mut sum: u32 = 0;
 
     input.lines().for_each(|line| {
@@ -113,8 +103,22 @@ fn part_two() -> u32 {
         sum += setup.red * setup.green * setup.blue;
     });
 
-    println!("Result: {:?}", sum);
+    sum
+}
 
-    println!("Solved in: {:?}", start.elapsed());
-    0
+#[cfg(test)]
+mod tests {
+    use crate::read_txt_file;
+
+    use super::*;
+
+    #[test]
+    fn part_one_test() {
+        assert_eq!(part_one(read_txt_file(2, crate::TextEnum::Input)), 2105);
+    }
+
+    #[test]
+    fn part_two_test() {
+        assert_eq!(part_two(read_txt_file(2, crate::TextEnum::Input)), 72422);
+    }
 }
