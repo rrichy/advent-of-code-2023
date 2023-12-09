@@ -1,16 +1,13 @@
-use std::time::Instant;
-
-use crate::read_txt_file;
+use crate::{read_txt_file, timed};
 
 pub fn solve() {
     println!("Day Three");
 
-    part_one();
-    part_two();
+    timed(part_one);
+    timed(part_two);
 }
 
 fn part_one() -> u32 {
-    let start = Instant::now();
     let input = read_txt_file(3, crate::TextEnum::Input);
 
     let mut sum: u32 = 0;
@@ -59,9 +56,6 @@ fn part_one() -> u32 {
         }
     }
 
-    println!("Result: {:?}", sum);
-
-    println!("Solved in: {:?}", start.elapsed());
     sum
 }
 
@@ -145,103 +139,30 @@ struct Schema {
     lines: Vec<String>,
 }
 
+enum HPos {
+    Left,
+    Mid,
+    Right,
+}
+
+enum VPos {
+    Top,
+    Mid,
+    Bottom,
+}
+
 impl Schema {
     fn find_gear_parts(&self, gear: &mut Gear) -> () {
-        if gear.row_index > 0 {
-            let row_index = gear.row_index - 1;
-            let line = &self.lines[row_index];
+        self.find_part_number_subdigit(HPos::Mid, VPos::Top, gear);
+        self.find_part_number_subdigit(HPos::Left, VPos::Top, gear);
+        self.find_part_number_subdigit(HPos::Right, VPos::Top, gear);
 
-            if let Some(ch) = line.chars().nth(gear.col_index) {
-                if ch.is_numeric() {
-                    if let Some(pn) = self.get_part_number_from_subdigit(gear.col_index, row_index)
-                    {
-                        gear.add_part(pn);
-                    }
-                }
-            }
+        self.find_part_number_subdigit(HPos::Mid, VPos::Bottom, gear);
+        self.find_part_number_subdigit(HPos::Left, VPos::Bottom, gear);
+        self.find_part_number_subdigit(HPos::Right, VPos::Bottom, gear);
 
-            if gear.col_index > 0 {
-                let col_index = gear.col_index - 1;
-                if let Some(ch) = line.chars().nth(col_index) {
-                    if ch.is_numeric() {
-                        if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
-                            gear.add_part(pn);
-                        }
-                    }
-                }
-            }
-
-            if gear.col_index < self.width - 1 {
-                let col_index = gear.col_index + 1;
-                if let Some(ch) = line.chars().nth(col_index) {
-                    if ch.is_numeric() {
-                        if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
-                            gear.add_part(pn);
-                        }
-                    }
-                }
-            }
-        }
-
-        if gear.row_index < self.height - 1 {
-            let row_index = gear.row_index + 1;
-            let line = &self.lines[row_index];
-
-            if let Some(ch) = line.chars().nth(gear.col_index) {
-                if ch.is_numeric() {
-                    if let Some(pn) = self.get_part_number_from_subdigit(gear.col_index, row_index)
-                    {
-                        gear.add_part(pn);
-                    }
-                }
-            }
-
-            if gear.col_index > 0 {
-                let col_index = gear.col_index - 1;
-                if let Some(ch) = line.chars().nth(col_index) {
-                    if ch.is_numeric() {
-                        if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
-                            gear.add_part(pn);
-                        }
-                    }
-                }
-            }
-
-            if gear.col_index < self.width - 1 {
-                let col_index = gear.col_index + 1;
-                if let Some(ch) = line.chars().nth(col_index) {
-                    if ch.is_numeric() {
-                        if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
-                            gear.add_part(pn);
-                        }
-                    }
-                }
-            }
-        }
-
-        let row_index = gear.row_index;
-        let line = &self.lines[row_index];
-        if gear.col_index > 0 {
-            let col_index = gear.col_index - 1;
-            if let Some(ch) = line.chars().nth(col_index) {
-                if ch.is_numeric() {
-                    if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
-                        gear.add_part(pn);
-                    }
-                }
-            }
-        }
-
-        if gear.col_index < self.width - 1 {
-            let col_index = gear.col_index + 1;
-            if let Some(ch) = line.chars().nth(col_index) {
-                if ch.is_numeric() {
-                    if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
-                        gear.add_part(pn);
-                    }
-                }
-            }
-        }
+        self.find_part_number_subdigit(HPos::Left, VPos::Mid, gear);
+        self.find_part_number_subdigit(HPos::Right, VPos::Mid, gear);
     }
 
     fn get_part_number_from_subdigit(&self, col: usize, row: usize) -> Option<PartNumber> {
@@ -272,10 +193,53 @@ impl Schema {
         }
         None
     }
+
+    fn find_part_number_subdigit(&self, h_pos: HPos, v_post: VPos, gear: &mut Gear) -> () {
+        let mut col_index = gear.col_index;
+        match h_pos {
+            HPos::Left => {
+                if col_index == 0 {
+                    return;
+                }
+                col_index -= 1;
+            }
+            HPos::Right => {
+                if col_index >= self.width - 1 {
+                    return;
+                }
+                col_index += 1;
+            }
+            _ => (),
+        }
+
+        let mut row_index = gear.row_index;
+        match v_post {
+            VPos::Top => {
+                if row_index == 0 {
+                    return;
+                }
+                row_index -= 1;
+            }
+            VPos::Bottom => {
+                if row_index >= self.height - 1 {
+                    return;
+                }
+                row_index += 1;
+            }
+            _ => (),
+        }
+
+        if let Some(ch) = self.lines[row_index].chars().nth(col_index) {
+            if ch.is_numeric() {
+                if let Some(pn) = self.get_part_number_from_subdigit(col_index, row_index) {
+                    gear.add_part(pn);
+                }
+            }
+        }
+    }
 }
 
 fn part_two() -> u32 {
-    let start = Instant::now();
     let input = read_txt_file(3, crate::TextEnum::Input);
     let mut sum: u32 = 0;
 
@@ -306,9 +270,6 @@ fn part_two() -> u32 {
         }
     }
 
-    println!("Result: {:?}", sum);
-
-    println!("Solved in: {:?}", start.elapsed());
     sum
 }
 

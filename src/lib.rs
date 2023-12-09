@@ -75,12 +75,15 @@ pub fn read_txt_file(day: u32, filetype: TextEnum) -> String {
         .expect("sample.txt does not exists!")
 }
 
-pub fn timed(f: &dyn Fn() -> ()) {
+pub fn timed<F, R>(func: F)
+where
+    F: FnOnce() -> R,
+    R: std::fmt::Display,
+{
     let start = Instant::now();
+    let result = func();
 
-    f();
-
-    println!("Solved in: {:?}", start.elapsed());
+    println!("Result: {}, solved in: {:?}", result, start.elapsed());
 }
 
 pub mod day_1;
