@@ -146,21 +146,120 @@ fn part_one(input: String) -> usize {
     min_loc
 }
 
-fn part_two(input: String) -> usize {
-    let mut almanac = Almanac {
-        seed_to_soil: vec![],
-        soil_to_fert: vec![],
-        fert_to_water: vec![],
-        water_to_light: vec![],
-        light_to_temp: vec![],
-        temp_to_hum: vec![],
-        hum_to_loc: vec![],
-    };
+#[derive(Debug, Clone)]
+struct Bound {
+    source: Range<usize>,
+    destination: Range<usize>,
+}
 
-    let seeds: Vec<Range<usize>> = input
-        .lines()
-        .next()
-        .unwrap()
+impl Bound {
+    fn src_to_dest(&self, src: usize) -> Option<usize> {
+        if self.source.contains(&src) {
+            let diff = src - self.source.start;
+            return Some(self.destination.start + diff);
+        }
+
+        None
+    }
+
+    fn dest_to_src(&self, dest: usize) -> Option<usize> {
+        if self.destination.contains(&dest) {
+            let diff = dest - self.destination.start;
+            return Some(self.source.start + diff);
+        }
+
+        None
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Mapper {
+    src: usize,
+    dest: usize,
+    length: usize,
+}
+
+impl Mapper {
+    fn src_contains(&self, seed: usize) -> bool {
+        self.src <= seed && self.last_src() > seed
+    }
+
+    fn dest_contains(&self, seed: usize) -> bool {
+        self.dest <= seed && self.last_dest() > seed
+    }
+
+    fn src_to_dest(&self, src: usize) -> Option<usize> {
+        if true {
+            let diff = src - self.src;
+            return Some(self.dest + diff);
+        }
+
+        None
+    }
+
+    fn dest_to_src(&self, dest: usize) -> Option<usize> {
+        if self.dest_contains(dest) {
+            let diff = dest - self.dest;
+            return Some(self.src + diff);
+        }
+
+        None
+    }
+
+    fn last_src(&self) -> usize {
+        self.src + self.length - 1
+    }
+
+    fn last_dest(&self) -> usize {
+        self.dest + self.length - 1
+    }
+}
+
+struct Almanac2 {
+    funcs: Vec<Vec<Mapper>>,
+    // composite: Vec<Bound>,
+}
+
+impl Almanac2 {
+    fn build(maps: String) -> Self {
+        let mut funcs = vec![];
+        maps.split("\n\n").for_each(|map| {
+            let mut _func = vec![];
+            map.lines().skip(1).for_each(|piece| {
+                let (dest, src, length): (usize, usize, usize) = piece
+                    .split_whitespace()
+                    .map(|s| s.parse().unwrap())
+                    .collect_tuple()
+                    .unwrap();
+
+                _func.push(Mapper { src, dest, length });
+            });
+
+            funcs.push(_func);
+        });
+
+        Self { funcs }
+    }
+
+    fn seed_to_loc(&self, seed: usize) -> usize {
+        let mut _seed = seed;
+        for map in &self.funcs {
+            if let Some(m) = map.iter().find(|m| m.src_contains(_seed)) {
+                if let Some(n_seed) = m.src_to_dest(_seed) {
+                    _seed = n_seed;
+                }
+            }
+        }
+        _seed
+    }
+}
+
+struct SeedRange(usize, usize);
+
+fn part_two(input: String) -> usize {
+    let (seeds, maps) = input.split_once("\n\n").unwrap();
+
+    let seeds = seeds
         .split_once(": ")
         .unwrap()
         .1
@@ -168,42 +267,18 @@ fn part_two(input: String) -> usize {
         .map(|s| s.parse().unwrap())
         .collect_vec()
         .chunks(2)
-        .map(|chunk| chunk[0]..(chunk[0] + chunk[1]))
+        .map(|chunk| SeedRange(chunk[0], chunk[1]))
         .collect_vec();
 
-    let mut current_map: &str = "";
-    input.lines().skip(2).for_each(|line| {
-        if line.contains("map:") {
-            current_map = line;
-        } else if line.chars().next().unwrap_or(' ').is_numeric() {
-            let (dest, src, range): (usize, usize, usize) = line
-                .split_whitespace()
-                .map(|s| s.parse().unwrap())
-                .collect_tuple()
-                .unwrap();
-
-            let map = Map(src, dest, range);
-
-            match current_map {
-                "seed-to-soil map:" => almanac.seed_to_soil.push(map),
-                "soil-to-fertilizer map:" => almanac.soil_to_fert.push(map),
-                "fertilizer-to-water map:" => almanac.fert_to_water.push(map),
-                "water-to-light map:" => almanac.water_to_light.push(map),
-                "light-to-temperature map:" => almanac.light_to_temp.push(map),
-                "temperature-to-humidity map:" => almanac.temp_to_hum.push(map),
-                "humidity-to-location map:" => almanac.hum_to_loc.push(map),
-                _ => (),
-            }
-        }
-    });
-
+    let almanac = Almanac2::build(maps.to_string());
     let mut min_loc = usize::MAX;
 
     seeds.iter().for_each(|seed_range| {
-        for seed in seed_range.clone().into_iter() {
+        for seed in seed_range.0..seed_range.0 + seed_range.1 {
             let loc = almanac.seed_to_loc(seed);
             if loc < min_loc {
                 min_loc = loc;
+                println!("{}", min_loc);
             }
         }
     });
@@ -227,6 +302,49 @@ mod tests {
 
     #[test]
     fn part_two_test() {
-        assert_eq!(part_two(read_txt_file(5, crate::TextEnum::Input)), 19499881);
+        assert_eq!(part_two(read_txt_file(5, crate::TextEnum::Input)), 81956384);
     }
 }
+
+/* The efficient way :
+
+For each seed range :
+
+For each map :
+
+We take each range and split them on intersections with given map
+
+Then we store the result of the map.
+
+And again until there is no range remaining.
+seeds, *maps = open('input').read().split('\n\n')
+seeds = [int(seed) for seed in seeds.split()[1:]]
+maps = [[list(map(int, line.split())) for line in m.splitlines()[1:]] for m in maps]
+
+locations = []
+for i in range(0, len(seeds), 2):
+    ranges = [[seeds[i], seeds[i + 1] + seeds[i]]]
+    results = []
+    for _map in maps:
+        while ranges:
+            start_range, end_range = ranges.pop()
+            for target, start_map, r in _map:
+                end_map = start_map + r
+                offset = target - start_map
+                if end_map <= start_range or end_range <= start_map:  # no overlap
+                    continue
+                if start_range < start_map:
+                    ranges.append([start_range, start_map])
+                    start_range = start_map
+                if end_map < end_range:
+                    ranges.append([end_map, end_range])
+                    end_range = end_map
+                results.append([start_range + offset, end_range + offset])
+                break
+            else:
+                results.append([start_range, end_range])
+        ranges = results
+        results = []
+    locations += ranges
+print(min(loc[0] for loc in locations))
+*/
