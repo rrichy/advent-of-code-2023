@@ -113,7 +113,7 @@ impl Config {
             4 => day_4::solve(input),
             5 => day_5::solve(input),
             6 => day_6::solve(input),
-            // 7 => day_7::solve(),
+            7 => day_7::solve(input),
             // 8 => day_8::solve(),
             // 9 => day_9::solve(),
             // 10 => day_10::solve(),
@@ -155,6 +155,6 @@ mod day_3;
 mod day_4;
 mod day_5;
 mod day_6;
-// mod day_7;
+mod day_7;
 // mod day_8;
 // mod day_9;
