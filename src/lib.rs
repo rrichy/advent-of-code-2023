@@ -5,6 +5,7 @@ use std::{env::current_dir, fs, io, process};
 pub enum TextEnum {
     Sample,
     SampleTwo,
+    SampleThree,
     Input,
 }
 
@@ -55,7 +56,7 @@ impl Config {
 
             text = loop {
                 println!(
-                    "Enter which puzzle input to use. [input, sample, sample1]. (default: input)"
+                    "Enter which puzzle input to use. [input, sample, sample2, sample3]. (default: input)"
                 );
 
                 let mut text = String::new();
@@ -67,6 +68,7 @@ impl Config {
                 match text.trim() {
                     "sample" => break TextEnum::Sample,
                     "sample2" => break TextEnum::SampleTwo,
+                    "sample3" => break TextEnum::SampleThree,
                     "input" => break TextEnum::Input,
                     _ => {
                         println!("Invalid text argument was supplied, using the default input");
@@ -82,6 +84,7 @@ impl Config {
                 text = match t.parse::<String>().unwrap_or_default().as_str() {
                     "sample" => TextEnum::Sample,
                     "sample2" => TextEnum::SampleTwo,
+                    "sample3" => TextEnum::SampleThree,
                     "input" => TextEnum::Input,
                     _ => {
                         println!("Invalid text argument was supplied, using the default input.txt");
@@ -114,7 +117,7 @@ impl Config {
             5 => day_5::solve(input),
             6 => day_6::solve(input),
             7 => day_7::solve(input),
-            // 8 => day_8::solve(),
+            8 => day_8::solve(input),
             // 9 => day_9::solve(),
             // 10 => day_10::solve(),
             // 11 => day_11::solve(),
@@ -129,6 +132,7 @@ pub fn read_txt_file(day: u32, filetype: TextEnum) -> String {
     let file = match filetype {
         TextEnum::Sample => "sample.txt",
         TextEnum::SampleTwo => "sample2.txt",
+        TextEnum::SampleThree => "sample3.txt",
         TextEnum::Input => "input.txt",
     };
 
@@ -156,5 +160,5 @@ mod day_4;
 mod day_5;
 mod day_6;
 mod day_7;
-// mod day_8;
+mod day_8;
 // mod day_9;
