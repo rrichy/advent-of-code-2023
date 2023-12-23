@@ -1,4 +1,3 @@
-
 use crate::timed;
 
 pub fn solve(input: String) {

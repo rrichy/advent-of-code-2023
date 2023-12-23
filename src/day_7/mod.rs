@@ -223,6 +223,9 @@ mod tests {
 
     #[test]
     fn part_two_test() {
-        assert_eq!(part_two(read_txt_file(7, crate::TextEnum::Input)), 250384185);
+        assert_eq!(
+            part_two(read_txt_file(7, crate::TextEnum::Input)),
+            250384185
+        );
     }
 }
