@@ -23,24 +23,30 @@ impl Point {
     }
 }
 
-struct Galaxy {
-    map: Vec<String>,
+struct Universe {
+    empty_rows: Vec<usize>,
+    empty_cols: Vec<usize>,
+    expansion_size: usize,
     locations: Vec<Point>,
 }
 
-impl Galaxy {
-    fn new(raw_map: String) -> Self {
-        let rows = Galaxy::get_empty_rows(&raw_map);
-        let cols = Galaxy::get_empty_cols(&raw_map);
-        let map = Galaxy::expand_map(&raw_map, rows, cols);
-        let locations = Galaxy::get_locations(&map);
+impl Universe {
+    fn new(map: Vec<&str>, expansion_size: usize) -> Self {
+        let empty_rows = Universe::get_empty_rows(&map);
+        let empty_cols = Universe::get_empty_cols(&map);
+        let locations = Universe::get_locations(&map);
 
-        Self { map, locations }
+        Self {
+            empty_rows,
+            empty_cols,
+            expansion_size,
+            locations,
+        }
     }
 
-    fn get_empty_rows(raw_map: &String) -> Vec<usize> {
+    fn get_empty_rows(raw_map: &Vec<&str>) -> Vec<usize> {
         raw_map
-            .lines()
+            .iter()
             .enumerate()
             .fold(vec![], |mut acc, (row_index, row)| {
                 if !row.contains('#') {
@@ -50,11 +56,11 @@ impl Galaxy {
             })
     }
 
-    fn get_empty_cols(raw_map: &String) -> Vec<usize> {
+    fn get_empty_cols(raw_map: &Vec<&str>) -> Vec<usize> {
         let mut cols = vec![];
-        let width = raw_map.lines().next().unwrap().chars().count();
+        let width = raw_map.iter().next().unwrap().chars().count();
         for col_index in 0..width {
-            let col = raw_map.lines().fold(String::new(), |mut acc, line| {
+            let col = raw_map.iter().fold(String::new(), |mut acc, line| {
                 acc.push(line.chars().nth(col_index).unwrap());
                 acc
             });
@@ -67,28 +73,7 @@ impl Galaxy {
         cols
     }
 
-    fn expand_map(raw_map: &String, rows: Vec<usize>, cols: Vec<usize>) -> Vec<String> {
-        raw_map
-            .lines()
-            .enumerate()
-            .fold(vec![], |mut acc, (row_index, row)| {
-                let mut new_row = String::new();
-                row.char_indices().for_each(|(col_index, ch)| {
-                    new_row.push(ch);
-                    if cols.contains(&col_index) {
-                        new_row.push(ch);
-                    }
-                });
-
-                if rows.contains(&row_index) {
-                    acc.push(new_row.clone());
-                }
-                acc.push(new_row);
-                acc
-            })
-    }
-
-    fn get_locations(map: &Vec<String>) -> Vec<Point> {
+    fn get_locations(map: &Vec<&str>) -> Vec<Point> {
         map.iter().enumerate().fold(vec![], |mut acc, (y, row)| {
             row.char_indices().for_each(|(x, ch)| {
                 if ch == '#' {
@@ -103,7 +88,25 @@ impl Galaxy {
         let mut galaxy_pairs = vec![];
         self.locations.iter().enumerate().for_each(|(index, p)| {
             for q in self.locations.iter().skip(index + 1) {
-                galaxy_pairs.push((p, q, p.distance(q)));
+                let mut distance = p.distance(q);
+                let range_col = if p.x > q.x { q.x..=p.x } else { p.x..=q.x };
+                let range_row = if p.y > q.y { q.y..=p.y } else { p.y..=q.y };
+
+                self.empty_cols.iter().for_each(|col_index| {
+                    if range_col.contains(col_index) {
+                        distance -= 1;
+                        distance += self.expansion_size;
+                    }
+                });
+
+                self.empty_rows.iter().for_each(|row_index| {
+                    if range_row.contains(row_index) {
+                        distance -= 1;
+                        distance += self.expansion_size;
+                    }
+                });
+
+                galaxy_pairs.push((p, q, distance));
             }
         });
 
@@ -112,13 +115,15 @@ impl Galaxy {
 }
 
 fn part_one(input: String) -> usize {
-    let galaxy = Galaxy::new(input);
+    let galaxy = Universe::new(input.lines().collect(), 2);
 
     galaxy.get_pairs().iter().fold(0, |acc, &(_, _, d)| acc + d)
 }
 
 fn part_two(input: String) -> usize {
-    0
+    let galaxy = Universe::new(input.lines().collect(), 1_000_000);
+
+    galaxy.get_pairs().iter().fold(0, |acc, &(_, _, d)| acc + d)
 }
 
 #[cfg(test)]
@@ -134,9 +139,9 @@ mod tests {
 
     #[test]
     fn part_two_test() {
-        //        assert_eq!(
-        //            part_two(read_txt_file(11, crate::TextEnum::Input)),
-        //            10151663816849
-        //        );
+        assert_eq!(
+            part_two(read_txt_file(11, crate::TextEnum::Input)),
+            702152204842
+        );
     }
 }
