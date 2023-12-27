@@ -17,7 +17,7 @@ fn part_one(input: String) -> usize {
         // check reflection horizontally
         for (up, down) in rows.iter().enumerate().tuple_windows() {
             // possible reflection point
-            if is_reflection_point(&rows, up.0, down.0) {
+            if is_start_of_reflection_point(&rows, up.0, down.0, false) {
                 sum += 100 * down.0;
                 return;
             }
@@ -34,7 +34,7 @@ fn part_one(input: String) -> usize {
         // check reflection horizontally
         for (up, down) in cols.iter().enumerate().tuple_windows() {
             // possible reflection point
-            if is_reflection_point(&cols, up.0, down.0) {
+            if is_start_of_reflection_point(&cols, up.0, down.0, false) {
                 sum += down.0;
                 return;
             }
@@ -42,27 +42,6 @@ fn part_one(input: String) -> usize {
     });
 
     sum
-}
-
-fn is_reflection_point(collection: &Vec<String>, up: usize, down: usize) -> bool {
-    let size_up = down;
-    let size_down = collection.len() - down;
-    let n_iteration = if size_up < size_down {
-        size_up
-    } else {
-        size_down
-    };
-
-    for n in 0..n_iteration {
-        let up_v = &collection[up - n];
-        let down_v = &collection[down + n];
-
-        if up_v != down_v {
-            return false;
-        }
-    }
-
-    true
 }
 
 fn is_equal(a: &String, b: &String, with_smudge: bool) -> (bool, bool) {
@@ -83,7 +62,12 @@ fn is_equal(a: &String, b: &String, with_smudge: bool) -> (bool, bool) {
     (a.eq(b), false)
 }
 
-fn is_start_of_reflection_point(collection: &Vec<String>, up: usize, down: usize) -> bool {
+fn is_start_of_reflection_point(
+    collection: &Vec<String>,
+    up: usize,
+    down: usize,
+    with_smudge: bool,
+) -> bool {
     let size_up = down;
     let size_down = collection.len() - down;
     let n_iteration = if size_up < size_down {
@@ -97,7 +81,7 @@ fn is_start_of_reflection_point(collection: &Vec<String>, up: usize, down: usize
         let up_v = &collection[up - n];
         let down_v = &collection[down + n];
 
-        let (equal, smudged) = is_equal(up_v, down_v, true);
+        let (equal, smudged) = is_equal(up_v, down_v, with_smudge);
 
         if smudged {
             smudge += 1;
@@ -108,7 +92,11 @@ fn is_start_of_reflection_point(collection: &Vec<String>, up: usize, down: usize
         }
     }
 
-    smudge == 1
+    if with_smudge {
+        return smudge == 1;
+    }
+
+    true
 }
 
 fn part_two(input: String) -> usize {
@@ -119,7 +107,7 @@ fn part_two(input: String) -> usize {
         // check reflection horizontally
         for (up, down) in rows.iter().enumerate().tuple_windows() {
             // possible reflection point
-            if is_start_of_reflection_point(&rows, up.0, down.0) {
+            if is_start_of_reflection_point(&rows, up.0, down.0, true) {
                 sum += 100 * down.0;
                 return;
             }
@@ -136,7 +124,7 @@ fn part_two(input: String) -> usize {
         // check reflection horizontally
         for (up, down) in cols.iter().enumerate().tuple_windows() {
             // possible reflection point
-            if is_start_of_reflection_point(&cols, up.0, down.0) {
+            if is_start_of_reflection_point(&cols, up.0, down.0, true) {
                 sum += down.0;
                 return;
             }
