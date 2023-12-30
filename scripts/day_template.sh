@@ -2,8 +2,8 @@
 
 DIR="$PWD/src/day_$1" 
 
-if test $DIR; then
-    echo "File already exist!"
+if [ -d "$DIR" ]; then
+    echo "$DIR already exist!" 
     exit 1
 fi
 
