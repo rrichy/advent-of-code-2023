@@ -1,7 +1,13 @@
 #!/bin/bash
 
-echo "Creating template files"
 DIR="$PWD/src/day_$1" 
+
+if test $DIR; then
+    echo "File already exist!"
+    exit 1
+fi
+
+echo "Creating template files"
 mkdir -p $DIR && touch "$DIR/sample.txt" "$DIR/input.txt"
 
 echo -e "use crate::timed;
