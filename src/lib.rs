@@ -125,6 +125,7 @@ impl Config {
             13 => day_13::solve(input),
             14 => day_14::solve(input),
             15 => day_15::solve(input),
+            16 => day_16::solve(input),
             _ => panic!("Day {} has not yet been solved.", day),
         }
     }
@@ -162,6 +163,7 @@ mod day_12;
 mod day_13;
 mod day_14;
 mod day_15;
+mod day_16;
 mod day_2;
 mod day_3;
 mod day_4;
